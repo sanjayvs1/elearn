@@ -1,38 +1,33 @@
-from flask import Flask
-from flask import request
-from flask import render_template
-from flask import redirect
+from flask import Flask, request, render_template, redirect, url_for
 import sqlite3
 
-
 app = Flask(__name__)
+app.debug=True
+app.secret_key = 'xyz'
 
-@app.route('/')
+users = {'username': 'password', 'sanjay':'123'}
+session = {'username':'student'}
+
+@app.route('/posts')
 def root():
-    # Connect to db
-    db = sqlite3.connect('posts.db')  
+    db = sqlite3.connect('main.db')  
     cursor = db.cursor()
-    
-    # Get data from db
     cursor.execute('SELECT * FROM posts ORDER BY id DESC')
     posts = cursor.fetchall()
-    
-    # Close db connection
     db.close()
     
-    return render_template('posts.html', posts=posts)
+    return render_template('posts.html', posts=posts, username=session["username"])
+
+@app.route('/')
+def home():
+    return render_template('index.html')
 
 @app.route('/post/<_id>')
 def post(_id):
-    # Connect to db
-    db = sqlite3.connect('posts.db')  
+    db = sqlite3.connect('main.db')  
     cursor = db.cursor()
-    
-    # Get data from db
     cursor.execute('SELECT * FROM posts WHERE id=%s' % _id)
     post = cursor.fetchone()
-    
-    # Close db connection
     db.close()
     return render_template('post.html', post=post)
 
@@ -42,7 +37,6 @@ def create():
 
 @app.route('/edit')
 def edit():
-    # Get request args
     title = request.args.get('title')
     post = request.args.get('post')
     _id = request.args.get('_id')
@@ -52,54 +46,53 @@ def edit():
 
 @app.route('/insert')
 def insert():
-    # Connect to db
-    db = sqlite3.connect('posts.db')  
+    db = sqlite3.connect('main.db')  
     cursor = db.cursor()
-    
-    # Get request args
     title = request.args.get('title')
     post = request.args.get('post')
-    
-    # Insert data into db
     cursor.execute('INSERT INTO posts(title, post) VALUES("%s", "%s")' % (title, post.replace('"', "'")))
     db.commit()
-    
-    # Close db connection
     db.close()
-    return redirect('/')
+    return redirect('/posts')
 
 @app.route('/update/<_id>')
 def update(_id):
-    # Connect to db
-    db = sqlite3.connect('posts.db')  
+    db = sqlite3.connect('main.db')  
     cursor = db.cursor()
-    
-    # Get request args
     title = request.args.get('title')
     post = request.args.get('post')
-    
-    # Update data in db
     cursor.execute('UPDATE posts SET title="%s", post="%s" WHERE id=%s' % (title, post.replace('"', "'"), _id))
     db.commit()
-    
-    # Close db connection
     db.close()
-    return redirect('/')
+    return redirect('/posts')
 
 @app.route('/delete/<_id>')
 def delete(_id):
-    # Connect to db
-    db = sqlite3.connect('posts.db')  
+    db = sqlite3.connect('main.db')  
     cursor = db.cursor()
-    
-    # Update data in db
     cursor.execute('DELETE FROM posts WHERE id=%s' % _id)
     db.commit()
-    
-    # Close db connection
     db.close()
-    return redirect('/')
+    return redirect('/posts')
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
 
-if __name__ == '__main__':
-    app.run(debug=True, threaded=True)
+        if username in users and users[username] == password:
+            session['username'] = username
+            return redirect('/posts')
+
+        return 'Invalid credentials. <a href="/login">Login</a>'
+
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session['username'] = 'student'
+    return redirect('/posts')
+  
+if __name__ == "__main__":
+    app.run(host='0.0.0.0',port=8080,threaded=True)
