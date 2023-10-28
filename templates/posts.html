@@ -7,6 +7,7 @@
     <h1 class="text-center font-weight-bold">ELEARN</h1>
     <div class="text-center">
     <a class="btn btn-primary" href="/">Home</a>
+    <a class="btn btn-primary" href="/posts">Posts</a>
       {% if username == 'student' %}
     <a class="btn btn-success" href="/login">Login</a>
     {% else %}
@@ -15,6 +16,11 @@
     </div>
     <br>
     <h2>Tutorials</h2>
+    <a href="/posts">all</a>
+    {% for topic in topics %}
+    /
+    <a href="/topic/{{topic}}">{{topic}}</a>
+    {% endfor %}
     <div class="row">
       <div class="col">
         <div class="card mt-4">
@@ -26,13 +32,20 @@
               <div class="card mt-3">
                 <div class="card-header">
                   <div class="row">
-                    <div class="col"><strong>{{post[1]}}</strong></div>
-                    {% if username != 'student' %}
+                    <div class="col"><strong>{{post[1]}}</strong> by {{post[3]}} with {{upvotes[post[0]]}} upvotes</div>
+                   
                     <div class="col text-right">
-                      <a class="btn btn-primary" href="/edit?title={{post[1]}}&post={{post[2]}}&_id={{post[0]}}">Update</a>
+                      {% if username == post[3] %}
+                      <a class="btn btn-primary" href="/edit?title={{post[1]}}&post={{post[2]}}&_id={{post[0]}}&topic={{post[4]}}">Update</a>
                       <a class="btn btn-danger" href="/delete/{{post[0]}}">Delete</a>
+                      {% endif %}
+                      |
+                      {% if username != 'student' %}
+                      <a class="btn btn-success" href="/upvote/{{post[0]}}">Upvote</a>
+                      <a class="btn btn-danger" href="/downvote/{{post[0]}}">Downvote</a>
+                      {% endif %}
                     </div>
-                    {% endif %}
+                    
                   </div>
                 </div>
                 <div class="card-body">
