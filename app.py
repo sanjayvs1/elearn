@@ -1,3 +1,6 @@
+# Shitty code I wrote a day before deadline
+# Don't Judge ;)
+
 from flask import Flask, request, render_template, redirect, url_for
 import sqlite3
 
